@@ -7,12 +7,14 @@ namespace StreamDeckIssueLogger
 {
     class Program
     {
-        static string selectedCategory = null;  // Store the selected category
+        //initial selected category folder stored in a variable
+        static string selectedCategory = null;  
 
         static void Main(string[] args)
         {
-            // Load or create Excel file
-            var filePath = "IssueLog.xlsx";
+            // load excel file if exists
+            //if doesnt exist create it
+            var filePath = "I:\\Helpdesk Logging\\WalkInLogs.xlsx";
             if (!File.Exists(filePath))
             {
                 CreateNewExcelFile(filePath);
@@ -28,7 +30,7 @@ namespace StreamDeckIssueLogger
 
         static void RunStreamDeckLogger(string filePath)
         {
-            // Open connection to the first Stream Deck
+            // Open connection to the Stream Deck
             var deck = StreamDeckSharp.StreamDeck.OpenDevice();
 
             if (deck == null)
@@ -36,13 +38,13 @@ namespace StreamDeckIssueLogger
                 Console.WriteLine("No Stream Deck found!");
                 return;
             }
+            //says this if stream deck is connected
+            Console.WriteLine("Stream Deck connected!"); 
 
-            Console.WriteLine("Stream Deck connected!");
-
-            // Set the event listener for key state changes (pressed/released)
+            // Set the event listener for key state changes i.e. pressed or released
             deck.KeyStateChanged += (sender, e) =>
             {
-                if (e.IsDown) // Only log when the button is pressed down
+                if (e.IsDown) // Only log when the button is pressed
                 {
                     if (selectedCategory == null)
                     {
@@ -55,14 +57,16 @@ namespace StreamDeckIssueLogger
                     }
                     else
                     {
-                        if (e.Key == 0)  // Return key pressed, reset the category
+                        // Return key pressed, reset the category (the top left button of the stream deck when we are inside folders
+                        // is a return key so in case 0 this is done)
+                        if (e.Key == 0)  
                         {
                             selectedCategory = null;
                             Console.WriteLine("Return to category selection.");
                         }
                         else
                         {
-                            // Second level: Choose the issue based on the category
+                            // Second level: Choose the issue based on the category 
                             string issue = IdentifyIssue(e.Key, selectedCategory);
                             if (issue != null)
                             {
@@ -242,13 +246,13 @@ namespace StreamDeckIssueLogger
             using (var workbook = new XLWorkbook(filePath))
             {
                 var worksheet = workbook.Worksheet(1);
-                var lastRow = worksheet.LastRowUsed().RowNumber() + 1;
+                var lastRow = worksheet.LastRowUsed().RowNumber();
 
                 // Write data to the next available row
-                worksheet.Cell(lastRow, 1).Value = lastRow; // ID starts from 1
-                worksheet.Cell(lastRow, 2).Value = DateTime.Now; // Date and time
-                worksheet.Cell(lastRow, 3).Value = category; // Category
-                worksheet.Cell(lastRow, 4).Value = issueType; // Issue description
+                worksheet.Cell(lastRow+1, 1).Value = lastRow; // ID starts from 1
+                worksheet.Cell(lastRow+1, 2).Value = DateTime.Now; // Date and time
+                worksheet.Cell(lastRow+1, 3).Value = category; // Category
+                worksheet.Cell(lastRow+1, 4).Value = issueType; // Issue description
 
                 workbook.Save();
             }
